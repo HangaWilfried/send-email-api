@@ -7,13 +7,15 @@ export const resendEmailService = () => {
 
   const sendEmail = async ({ receiver, subject, html, from }: NotificationDto) => {
     if (receiver) {
-      const platform = '"FAST-RELAYS" <onboarding@resend.dev>';
+      const platform = 'FAST-RELAYS <notifications@mailer.fast-relays.com>';
 
-      const {data, error} = await resend.emails.send({
+      const { data, error } = await resend.emails.send({
+        html,
         subject,
         to: receiver,
-        html: stripHtml(html),
+        text: stripHtml(html),
         from: from || platform,
+        replyTo: 'support@fast-relays.com',
       })
 
       if (error) {
