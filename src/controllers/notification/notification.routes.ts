@@ -13,7 +13,7 @@ router.get("/health", (_req, res) => {
 });
 
 router.post(
-  "/",
+  "/email",
   validateSchema(notificationSchema),
   sendEmailNotification
 );

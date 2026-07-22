@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(LoggerMiddleware);
 
-app.use("/email", notificationRoutes);
+app.use("/", notificationRoutes);
 
 app.use(ErrorHandler);
 
