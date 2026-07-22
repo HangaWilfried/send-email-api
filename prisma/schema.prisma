@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  lastname  String
+  firstname String
+  email     String   @unique
+  password  String
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+}
+
+model Project {
+  id            String    @id @default(uuid())
+  name          String    @unique
+  description   String
+  versions      Version[]
+  latestVersion String?
+  createdAt     DateTime  @default(now()) @db.Timestamp(3)
+}
+
+model Version {
+  id      String @id @default(uuid())
+  name    String
+  modules String
+  cloudId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId String
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+
+  @@unique([projectId, name])
+}
