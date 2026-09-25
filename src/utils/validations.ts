@@ -7,11 +7,11 @@ export const validateSchema = <T extends ZodTypeAny>(schema: T) => {
     const result = schema.safeParse(req.body);
 
     if (!result.success) {
-      return next(
-        new BadRequestException(
-          JSON.stringify(result.error.issues.map((i) => i.message))
-        )
-      );
+      const errors = result.error.issues.map((issue) => {
+        return `Field: ${issue.path.join(".")} | Error: ${issue.message}`;
+      });
+
+      return next(new BadRequestException(JSON.stringify(errors)));
     }
 
     req.body = result.data;

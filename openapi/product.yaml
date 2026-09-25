@@ -1,0 +1,1548 @@
+openapi: 3.0.3
+info:
+  title: "Article Manager REST API"
+  description: "API for managing articles."
+  version: "1.0.0"
+servers:
+  - url: "http://localhost:8181/api"
+
+tags:
+  - name: "Article"
+    description: "Endpoints for managing articles."
+  - name: "Promotion"
+    description: "Endpoints for managing Promotion."
+  - name: "Tag"
+    description: "Endpoints for managing tags."
+
+paths:
+  /business/{businessId}/article/{articleId}/promotion:
+    post:
+      summary: "Create a promotion for an article"
+      description: "Creates a new promotion for a specific article"
+      operationId: "createPromotion"
+      tags:
+        - "Promotion"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "articleId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePromotionDto'
+      responses:
+        201:
+          description: "Promotion created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionIdDto'
+        403:
+          description: "Forbidden"
+        404:
+          description: "Article not found"
+  /business/{businessId}/article/{articleId}/promotion/{promotionId}:
+    delete:
+      summary: "Delete a promotion"
+      description: "Deletes a promotion for a specific article"
+      operationId: "deletePromotion"
+      tags:
+        - "Promotion"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "articleId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "promotionId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        204:
+          description: "Promotion deleted successfully"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Promotion not found"
+    put:
+      summary: "Update a promotion"
+      description: "Updates an existing promotion for a specific article"
+      operationId: "updatePromotion"
+      tags:
+        - "Promotion"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "articleId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "promotionId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePromotionDto'
+      responses:
+        204:
+          description: "Promotion updated successfully"
+        400:
+          description: "Invalid input"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Promotion not found"
+  /public/promotion:
+    get:
+      summary: "Get all promotions"
+      description: "Retrieves a paginated list of promotions with optional filters"
+      operationId: "getAllPromotions"
+      tags:
+        - "Promotion"
+      parameters:
+        - name: "page"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            default: 0
+          description: "Page number (zero-based)"
+        - name: "size"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: "Number of items per page"
+        - name: "field"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/PromotionSortFieldDTO"
+        - name: "direction"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/SortDirectionDTO"
+        - name: "status"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/PromotionStatusDto"
+        - name: "businessId"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            format: "uuid"
+          description: "Filter by business ID"
+        - name: "name"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+          description: "Filter by promotion name (case-insensitive)"
+      responses:
+        200:
+          description: "Paginated list of promotions"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionPageableResponseDTO'
+  /public/promotion/active:
+    get:
+      summary: "Get all active promotions"
+      description: "Retrieves a paginated list of currently active promotions across all businesses"
+      operationId: "getActivePromotions"
+      tags:
+        - "Promotion"
+      parameters:
+        - name: "page"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            default: 0
+          description: "Page number (zero-based)"
+        - name: "size"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: "Number of items per page"
+        - name: "field"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/PromotionSortFieldDTO"
+        - name: "direction"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/SortDirectionDTO"
+        - name: "name"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+          description: "Filter by promotion name (case-insensitive)"
+      responses:
+        200:
+          description: "Paginated list of active promotions"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionPageableResponseDTO'
+  /public/promotion/{promotionId}:
+    get:
+      summary: "Get a promotion by ID (public)"
+      description: "Retrieves a specific promotion by its ID without authentication"
+      operationId: "getPublicPromotionById"
+      tags:
+        - "Promotion"
+      parameters:
+        - name: "promotionId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+          description: "The unique identifier of the promotion"
+      responses:
+        200:
+          description: "Promotion found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionDto'
+        404:
+          description: "Promotion not found"
+  /business/{businessId}/promotion:
+    get:
+      summary: "Get all promotions of a business"
+      description: "Retrieves a paginated list of promotions for a specific business"
+      operationId: "getPromotionsByBusinessId"
+      tags:
+        - "Promotion"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+          description: "The unique identifier of the business"
+        - name: "page"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            default: 0
+          description: "Page number (zero-based)"
+        - name: "size"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: "Number of items per page"
+        - name: "field"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/PromotionSortFieldDTO"
+        - name: "direction"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/SortDirectionDTO"
+        - name: "status"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/PromotionStatusDto"
+      responses:
+        200:
+          description: "Paginated list of promotions"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionPageableResponseDTO'
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+  /business/{businessId}/promotion/{promotionId}:
+    get:
+      summary: "Get a promotion by ID"
+      description: "Retrieves a specific promotion by its ID for business collaborators"
+      operationId: "getPromotionById"
+      tags:
+        - "Promotion"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+          description: "The unique identifier of the business"
+        - name: "promotionId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+          description: "The unique identifier of the promotion"
+      responses:
+        200:
+          description: "Promotion found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromotionDto'
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Promotion not found"
+  /business/{businessId}/article:
+    get:
+      summary: "Get all articles of a business (private)"
+      description: "Retrieves a paginated list of articles for a business (all statuses) with optional filters."
+      operationId: "getAllArticlesByBusinessIdForBusinessUser"
+      tags:
+        - "Article"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+          description: "The unique identifier of the business"
+        - name: "page"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            default: 0
+          description: "Page number (zero-based)"
+        - name: "size"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: "Number of items per page"
+        - name: "field"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/ArticleSortFieldDTO"
+        - name: "direction"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/SortDirectionDTO"
+        - name: "status"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/ArticleStatusDto"
+        - name: "category"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "name"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+          description: "Filter by article name (case-insensitive)"
+        - name: "tags"
+          in: "query"
+          required: false
+          schema:
+            type: "array"
+            items:
+              type: "string"
+              format: "uuid"
+          description: "Filter by tag IDs"
+      responses:
+        200:
+          description: "Paginated list of articles"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticlePageableResponseDTO'
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+    post:
+      summary: "Create a new article"
+      description: "Creates a new article and returns its ID."
+      operationId: "createArticle"
+      tags:
+        - "Article"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateArticleDto'
+      responses:
+        201:
+          description: "Article created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleIdDto'
+        400:
+          description: "Invalid input"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+  /business/{businessId}/tag:
+    post:
+      summary: "Create a new tag"
+      description: "Creates a new tag for a business and returns its ID."
+      operationId: "createTag"
+      tags:
+        - "Tag"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTagDto'
+      responses:
+        201:
+          description: "Tag created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagIdDto'
+        400:
+          description: "Invalid input"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        409:
+          description: "Tag with this title already exists for this business"
+  /business/{businessId}/article/{articleId}/tag:
+    post:
+      summary: "Add tags to an article"
+      description: "Adds one or more existing tags to an article. Tags already linked to the article are ignored."
+      operationId: "addTagsToArticle"
+      tags:
+        - "Tag"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "articleId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddTagsToArticleDto'
+      responses:
+        204:
+          description: "Tags added to article successfully"
+        400:
+          description: "Invalid input"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Article or tag not found"
+  /public/business/{businessId}/tags:
+    get:
+      summary: "Get all tags by business ID"
+      description: "Retrieves a paginated list of tags for a business with optional search filters (title, description)."
+      operationId: "getAllTagsByBusinessId"
+      tags:
+        - "Tag"
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+          description: "Business ID"
+        - name: "page"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            default: 0
+          description: "Page number (zero-based)"
+        - name: "size"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: "Number of items per page"
+        - name: "direction"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/SortDirectionDTO"
+          description: "Sort direction (ASC, DESC) by creation date"
+        - name: "query"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+          description: "Search query string to filter in tag title or description"
+      responses:
+        "200":
+          description: "Tags retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagPageableResponseDTO'
+        "404":
+          description: "Business not found"
+  /public/business/{businessId}/article:
+    get:
+      summary: "Get all articles of a business"
+      description: "Retrieves a paginated list of published articles with optional filters."
+      operationId: "getAllArticlesByBusinessId"
+      tags:
+        - "Article"
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+          description: "The unique identifier of the business"
+        - name: "page"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            default: 0
+          description: "Page number (zero-based)"
+        - name: "size"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: "Number of items per page"
+        - name: "field"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/ArticleSortFieldDTO"
+        - name: "direction"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/SortDirectionDTO"
+        - name: "category"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "tags"
+          in: "query"
+          required: false
+          schema:
+            type: "array"
+            items:
+              type: "string"
+              format: "uuid"
+          description: "Filter by tag IDs"
+      responses:
+        200:
+          description: "Paginated list of articles"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticlePageableResponseDTO'
+        404:
+          description: "Business not found"
+  /public/article/category:
+    get:
+      summary: "Get all article categories"
+      description: "Retrieves all available article categories."
+      operationId: "getAllArticleCategories"
+      tags:
+        - "Article"
+      responses:
+        200:
+          description: "List of article categories"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: '#/components/schemas/ArticleCategoryDTO'
+  /public/business/{businessId}/article/{articleId}:
+    get:
+      summary: "Get article by ID"
+      description: "Retrieves an article by its ID."
+      operationId: "getArticleById"
+      tags:
+        - "Article"
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "articleId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        200:
+          description: "Article found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleDto'
+        404:
+          description: "Article not found"
+  /business/{businessId}/article/{articleId}:
+    put:
+      summary: "Update article by ID"
+      description: "Updates an existing article by its ID."
+      operationId: "updateArticleById"
+      tags:
+        - "Article"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "articleId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateArticleDto'
+      responses:
+        204:
+          description: "Article updated successfully"
+        400:
+          description: "Invalid input"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Article not found"
+    delete:
+      summary: "Delete article by ID"
+      description: "Deletes an article by its ID."
+      operationId: "deleteArticleById"
+      tags:
+        - "Article"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "articleId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        204:
+          description: "Article deleted successfully"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Article not found"
+  /public/business/{businessId}/article/verify-ownership:
+    post:
+      summary: "Verify that articles belong to the business"
+      description: "Returns whether all provided article IDs belong to the specified business."
+      operationId: "verifyArticleOwnership"
+      tags:
+        - "Article"
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyOwnershipRequestDto'
+      responses:
+        200:
+          description: "Ownership verification result"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyOwnershipResponseDto'
+  /public/article/by-ids:
+    post:
+      summary: "Get articles by IDs"
+      description: "Returns articles that match the provided IDs."
+      operationId: "getArticlesByIds"
+      tags:
+        - "Article"
+      parameters:
+        - name: "extractCode"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+          description: "Specifies which product fields should be extracted and returned in the response."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleIdsRequestDto'
+      responses:
+        200:
+          description: "Articles list"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ArticleDto'
+        400:
+          description: "Invalid request"
+  /public/business/{businessId}/article/count:
+    get:
+      summary: "Count articles by business ID"
+      description: "Retrieves the total number of articles for a given business, optionally filtered by status."
+      operationId: "countArticlesByBusinessId"
+      tags:
+        - "Article"
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "status"
+          in: "query"
+          required: false
+          description: "Filter by article status. If not provided, counts all articles regardless of status."
+          schema:
+            $ref: "#/components/schemas/ArticleStatusDto"
+      responses:
+        200:
+          description: "Total number of articles"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountResponseDTO'
+        400:
+          description: "Invalid status value"
+        404:
+          description: "Business not found"
+  /public/article/count:
+    get:
+      summary: "Count all published articles"
+      description: "Retrieves the total number of published articles across all businesses."
+      operationId: "countAllPublishedArticles"
+      tags:
+        - "Article"
+      responses:
+        200:
+          description: "Total number of published articles"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountResponseDTO'
+  /public/article/count-by-user:
+    post:
+      summary: "Count articles created by users per business"
+      description: "Returns the number of articles created by each specified user for each specified business."
+      operationId: "countArticlesByUser"
+      tags:
+        - "Article"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CountByUserRequestDto'
+      responses:
+        200:
+          description: "Article counts per user and business"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountByUserResponseDto'
+        400:
+          description: "Invalid request"
+  /business/{businessId}/article/{articleId}/publish:
+    put:
+      summary: "Publish article"
+      description: "Publishes an article by its ID."
+      operationId: "publishArticle"
+      tags:
+        - "Article"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "articleId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "204":
+          description: "Article successfully published"
+        "404":
+          description: "Article not found"
+        "403":
+          description: "Not authorized to publish this article"
+  /business/{businessId}/article/{articleId}/unpublish:
+    put:
+      summary: "Unpublish article"
+      description: "Removes an article from publication."
+      operationId: "unpublishArticle"
+      tags:
+        - "Article"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "articleId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "204":
+          description: "Article successfully unpublished"
+        "404":
+          description: "Article not found"
+        "403":
+          description: "Not authorized to unpublish this article"
+  /business/{businessId}/article/unpublish-all:
+    put:
+      operationId: "unpublishAllArticles"
+      summary: "Unpublish all articles for a business"
+      description: "Unpublishes all published articles belonging to the specified business."
+      tags:
+        - "Article"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        "204":
+          description: "All articles unpublished successfully"
+        "403":
+          description: "Forbidden"
+        "404":
+          description: "Business not found"
+  /public/article:
+    get:
+      summary: "Get all articles"
+      description: "Retrieves a paginated list of articles with optional filters."
+      operationId: "getAllArticles"
+      tags:
+        - "Article"
+      parameters:
+        - name: "page"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            default: 0
+          description: "Page number (zero-based)"
+        - name: "size"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: "Number of items per page"
+        - name: "field"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/ArticleSortFieldDTO"
+        - name: "direction"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/SortDirectionDTO"
+        - name: "category"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "name"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+          description: "Filter by article name (case-insensitive)"
+        - name: "tags"
+          in: "query"
+          required: false
+          schema:
+            type: "array"
+            items:
+              type: "string"
+              format: "uuid"
+          description: "Filter by tag IDs"
+      responses:
+        200:
+          description: "Paginated list of articles"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticlePageableResponseDTO'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ArticleCategoryDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+          description: "Unique identifier of the business type"
+        nameEn:
+          type: "string"
+          description: "English name of the business type"
+        descriptionEn:
+          type: "string"
+          description: "English description of the business type"
+        nameFr:
+          type: "string"
+          description: "French name of the business type"
+        descriptionFr:
+          type: "string"
+          description: "French description of the business type"
+    PromotionIdDto:
+      type: "object"
+      required:
+        - "id"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+    PromotionSortFieldDTO:
+      type: "string"
+      enum:
+        - "CREATED_AT"
+        - "START_DATE"
+        - "END_DATE"
+        - "DISCOUNT_PERCENTAGE"
+        - "STATUS"
+    PromotionStatusDto:
+      type: "string"
+      enum:
+        - "ACTIVE"
+        - "EXPIRED"
+        - "SCHEDULED"
+    CreatePromotionDto:
+      type: "object"
+      required:
+        - "discountPercentage"
+        - "startDate"
+        - "endDate"
+      properties:
+        discountPercentage:
+          type: "number"
+          format: "double"
+          minimum: 0
+          maximum: 100
+        startDate:
+          type: "string"
+          format: "date-time"
+        endDate:
+          type: "string"
+          format: "date-time"
+        description:
+          type: "string"
+    UpdatePromotionDto:
+      type: "object"
+      properties:
+        discountPercentage:
+          type: "number"
+          format: "double"
+          minimum: 0
+          maximum: 100
+        startDate:
+          type: "string"
+          format: "date-time"
+        endDate:
+          type: "string"
+          format: "date-time"
+        description:
+          type: "string"
+    PromotionDto:
+      type: "object"
+      required:
+        - "id"
+        - "articleId"
+        - "businessId"
+        - "discountPercentage"
+        - "startDate"
+        - "endDate"
+        - "status"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        article:
+          $ref: "#/components/schemas/ArticleDto"
+        businessId:
+          type: "string"
+          format: "uuid"
+        discountPercentage:
+          type: "number"
+          format: "double"
+        startDate:
+          type: "string"
+          format: "date-time"
+        endDate:
+          type: "string"
+          format: "date-time"
+        description:
+          type: "string"
+        status:
+          $ref: '#/components/schemas/PromotionStatusDto'
+        createdAt:
+          type: "string"
+          format: "date-time"
+        originalPrice:
+          $ref: '#/components/schemas/MoneyDto'
+        productName:
+          type: "string"
+        productDescription:
+          type: "string"
+        productImages:
+          type: "object"
+          additionalProperties:
+            type: "string"
+        productCategory:
+          $ref: "#/components/schemas/ArticleCategoryDTO"
+        productQuantity:
+          type: integer
+        productSpecifications:
+          type: "object"
+          additionalProperties:
+            type: "string"
+    PromotionPageableResponseDTO:
+      type: "object"
+      properties:
+        content:
+          type: "array"
+          items:
+            $ref: '#/components/schemas/PromotionDto'
+        page:
+          $ref: '#/components/schemas/PageableResponsePageDTO'
+    CountResponseDTO:
+      type: "object"
+      required:
+        - "value"
+      properties:
+        value:
+          type: "integer"
+          format: "int64"
+    ArticleSortFieldDTO:
+      type: "string"
+      enum:
+        - "CREATED_AT"
+        - "NAME"
+        - "PRICE"
+    SortDirectionDTO:
+      type: "string"
+      enum:
+        - "ASC"
+        - "DESC"
+    ArticlePageableResponseDTO:
+      type: "object"
+      properties:
+        content:
+          type: "array"
+          items:
+            $ref: '#/components/schemas/ArticleDto'
+        page:
+          $ref: '#/components/schemas/PageableResponsePageDTO'
+    TagPageableResponseDTO:
+      type: "object"
+      properties:
+        content:
+          type: "array"
+          items:
+            $ref: '#/components/schemas/TagDto'
+        page:
+          $ref: '#/components/schemas/PageableResponsePageDTO'
+    PageableResponsePageDTO:
+      type: object
+      properties:
+        size:
+          type: integer
+          description: "Number of items per page"
+          example: 20
+        number:
+          type: integer
+          description: "Current page number (zero-based)"
+          example: 0
+        totalElements:
+          type: integer
+          format: int64
+          description: "Total number of items across all pages"
+          example: 100
+        totalPages:
+          type: integer
+          description: "Total number of pages"
+          example: 5
+    VerifyOwnershipRequestDto:
+      type: object
+      required:
+        - productIds
+      properties:
+        productIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    ArticleIdsRequestDto:
+      type: "object"
+      required:
+        - "productIds"
+      properties:
+        productIds:
+          type: "array"
+          minItems: "1"
+          maxItems: "50"
+          items:
+            type: "string"
+            format: "uuid"
+    CountByUserRequestDto:
+      type: "object"
+      required:
+        - "queries"
+      properties:
+        queries:
+          type: "array"
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/CountByUserQueryDto'
+    CountByUserQueryDto:
+      type: "object"
+      required:
+        - "username"
+        - "businessId"
+      properties:
+        username:
+          type: "string"
+          description: "Username of the article creator"
+          example: "john_doe"
+        businessId:
+          type: "string"
+          format: "uuid"
+          description: "Business identifier"
+    CountByUserResponseDto:
+      type: "object"
+      required:
+        - "results"
+      properties:
+        results:
+          type: "array"
+          items:
+            $ref: '#/components/schemas/CountByUserResultDto'
+    CountByUserResultDto:
+      type: "object"
+      required:
+        - "username"
+        - "businessId"
+        - "count"
+      properties:
+        username:
+          type: "string"
+          description: "Username of the article creator"
+        businessId:
+          type: "string"
+          format: "uuid"
+          description: "Business identifier"
+        count:
+          type: "integer"
+          format: "int64"
+          description: "Number of articles created by this user for this business"
+    VerifyOwnershipResponseDto:
+      type: object
+      required:
+        - valid
+      properties:
+        valid:
+          type: boolean
+          description: "True if all provided productIds belong to the business"
+    MoneyDto:
+      type: object
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: number
+          format: decimal
+          example: 49.99
+        currency:
+          type: string
+          pattern: "^[A-Z]{3}$"
+          example: "USD"
+    ArticleIdDto:
+      type: "object"
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+    AddTagsToArticleDto:
+      type: "object"
+      required:
+        - tagIds
+      properties:
+        tagIds:
+          type: array
+          description: "List of tag identifiers to link to the article. Tags already attached are ignored."
+          items:
+            type: string
+            format: uuid
+    TagIdDto:
+      type: "object"
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+    CreateTagDto:
+      type: "object"
+      required:
+        - "title"
+      properties:
+        title:
+          type: "string"
+          description: "Title of the tag"
+          example: "Promotion"
+        description:
+          type: "string"
+          description: "Description of the tag"
+    TagDto:
+      type: "object"
+      required:
+        - "id"
+        - "title"
+        - "businessId"
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: "string"
+          description: "Title of the tag"
+        description:
+          type: "string"
+          description: "Description of the tag"
+        businessId:
+          type: string
+          format: uuid
+          description: "Business identifier"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ArticleStatusDto:
+      type: "string"
+      enum:
+        - "DRAFT"
+        - "PUBLISHED"
+        - "UNPUBLISHED"
+    ArticleDto:
+      type: "object"
+      required:
+        - "id"
+        - "name"
+        - "description"
+        - "category"
+        - "price"
+        - "quantity"
+        - "specifications"
+        - "createdAt"
+        - "updatedAt"
+        - "businessId"
+        - "createdBy"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        name:
+          type: "string"
+          example: "Laptop Dell XPS 13"
+        description:
+          type: "string"
+        category:
+          $ref: "#/components/schemas/ArticleCategoryDTO"
+        price:
+          $ref: '#/components/schemas/MoneyDto'
+        quantity:
+          type: integer
+          example: 50
+        specifications:
+          type: "object"
+          additionalProperties:
+            type: "string"
+          description: "Product specifications as key-value pairs (e.g. size: XXL)"
+          example:
+            size: "XXL"
+            color: "Black"
+        images:
+          type: "object"
+          additionalProperties:
+            type: "string"
+            format: "string"
+        createdAt:
+          type: "string"
+          format: "date-time"
+          example: "2024-01-15T10:30:00Z"
+        updatedAt:
+          type: "string"
+          format: "date-time"
+        businessId:
+          type: "string"
+          format: "uuid"
+        createdBy:
+          type: "string"
+        status:
+          $ref: '#/components/schemas/ArticleStatusDto'
+        tags:
+          type: "array"
+          items:
+            $ref: '#/components/schemas/TagDto'
+    CreateArticleDto:
+      type: "object"
+      required:
+        - "name"
+        - "category"
+        - "price"
+        - "quantity"
+        - "specifications"
+      properties:
+        name:
+          type: "string"
+        description:
+          type: "string"
+        category:
+          type: "string"
+          format: "uuid"
+        price:
+          $ref: '#/components/schemas/MoneyDto'
+        quantity:
+          type: integer
+        specifications:
+          type: "object"
+          additionalProperties:
+            type: "string"
+          description: "Product specifications as key-value pairs (e.g. size: XXL)"
+        images:
+          type: "object"
+          additionalProperties:
+            type: "string"
+        tagIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: "Optional list of tag IDs to associate with the article"
+    UpdateArticleDto:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        categoryId:
+          type: "string"
+          format: "uuid"
+        price:
+          $ref: '#/components/schemas/MoneyDto'
+        quantity:
+          type: integer
+        specifications:
+          type: "object"
+          nullable: true
+          additionalProperties:
+            type: "string"
+          description: "Product specifications as key-value pairs (e.g. size: XXL)"
+        images:
+          type: object
+          nullable: true
+          additionalProperties:
+            type: string
+            format: string
+        tagIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: "Optional list of tag IDs to update/overwrite for the article"

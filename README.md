@@ -90,19 +90,19 @@ npm run serve
 ### Build the image
 
 ```bash
-docker buildx build -t mailer_service:0.0.2 .
+docker buildx build -t mailer_service:1.0.0 .
 ```
 
 ### Tag the image
 
 ```bash
-docker tag mailer_service:0.0.2 fopsi/mailer_service:0.0.2
+docker tag mailer_service:1.0.0 fopsi/mailer_service:1.0.0
 ```
 
 ### Push the image
 
 ```bash
-docker push fopsi/mailer_service:0.0.2
+docker push fopsi/mailer_service:1.0.0
 ```
 
 ---

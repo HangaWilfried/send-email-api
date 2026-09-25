@@ -1,0 +1,1263 @@
+openapi: 3.0.3
+info:
+  title: "Business Manager REST API"
+  description: "API for managing business."
+  version: "0.0.1-SNAPSHOT"
+servers:
+  - url: "http://localhost:8181/api"
+tags:
+  - name: "BusinessZone"
+    description: "Endpoints for managing business zone."
+  - name: "Business"
+    description: "Endpoints for managing business."
+  - name: "Collaboration"
+    description: "Endpoints for managing collaborations."
+  - name: "Invitation"
+    description: "Endpoints for managing business invitations."
+paths:
+  /my/invitations:
+    get:
+      summary: "Get all my invitations"
+      description: "Retrieves a list of all pending invitations for the authenticated user."
+      operationId: "getMyInvitations"
+      tags:
+        - "Invitation"
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: "A list of invitations for the user."
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: '#/components/schemas/InvitationDTO'
+  /my/invitations/{invitationId}/accept:
+    put:
+      summary: "Accept an invitation"
+      description: "Accepts a pending invitation to join a business as a collaborator."
+      operationId: "acceptInvitation"
+      tags:
+        - "Invitation"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "invitationId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        '200':
+          description: "Invitation accepted successfully."
+        '404':
+          description: "Invitation not found."
+  /my/invitations/{invitationId}/reject:
+    put:
+      summary: "Reject an invitation"
+      description: "Rejects a pending invitation to join a business."
+      operationId: "rejectInvitation"
+      tags:
+        - "Invitation"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "invitationId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RejectInvitationRequestDTO"
+      responses:
+        '200':
+          description: "Invitation rejected successfully."
+        '404':
+          description: "Invitation not found."
+  /my/business/{businessId}/invitations:
+    get:
+      summary: "Get invitations for a business"
+      description: "Retrieves a list of invitations sent for a specific business. Only accessible by the owner."
+      operationId: "getBusinessInvitations"
+      tags:
+        - "Invitation"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        '200':
+          description: "A list of invitations for the business."
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: '#/components/schemas/InvitationDTO'
+  /my/invitations/{invitationId}/cancel:
+    delete:
+      summary: "Cancel a pending invitation"
+      description: "Cancels a pending invitation. Only the owner of the business can cancel invitations."
+      operationId: "cancelInvitation"
+      tags:
+        - "Invitation"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "invitationId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        '204':
+          description: "Invitation cancelled successfully."
+        '403':
+          description: "Only the owner can cancel invitations."
+        '404':
+          description: "Business or invitation not found."
+  /my/business/{businessId}/collaborator:
+    get:
+      summary: "Get all collaborators"
+      description: "Retrieves a list of all collaborators for a specific business."
+      operationId: "getBusinessCollaborators"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        '200':
+          description: "A list of collaborators for the business."
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: '#/components/schemas/CollaboratorDTO'
+
+  /my/business/{businessId}/collaboration/invite:
+    post:
+      summary: "Send a collaboration invitation to an existing user"
+      description: "Sends an invitation to an existing user to join the specified business as a collaborator. The invitation must be accepted by the invitee before they become an active collaborator."
+      operationId: "sendCollaborationInvitation"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: businessId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteCollaboratorRequestDTO"
+      responses:
+        '201':
+          description: "Invitation sent successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateResponseDTO"
+        '403':
+          description: "You are not the owner of this business"
+        '404':
+          description: "Business or invitee not found"
+        '409':
+          description: "Pending invitation already exists or user is already a collaborator"
+  /my/business/{businessId}/collaborator/remove:
+    put:
+      summary: "Remove a collaborator from the business"
+      description: "Removes a collaborator from the specified business."
+      operationId: "removeCollaboratorFromBusiness"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveCollaboratorRequestDTO"
+      responses:
+        '200':
+          description: "Collaborator removed successfully"
+
+  /public/business/{businessId}/collaborator/count:
+    get:
+      summary: "Count collaborators by business ID"
+      description: "Retrieves the total number of collaborators for a given business."
+      operationId: "countCollaboratorsByBusinessId"
+      tags:
+        - "Business"
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        200:
+          description: "Total number of collaborators"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountResponseDTO'
+  /my/business/{businessId}/images:
+    put:
+      summary: "Update business images"
+      description: "Updates the logo and/or banner images of a business"
+      operationId: "updateBusinessImages"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          description: "The ID of the business to update images"
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessImagesDTO'
+      responses:
+        204:
+          description: "Business images updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDTO'
+        403:
+          description: "Forbidden - The user does not have permission to perform this operation"
+        404:
+          description: "Business not found"
+  /public/business/types:
+    get:
+      summary: "Get all business types"
+      description: "Retrieves a list of all available business types"
+      operationId: "getAllBusinessTypes"
+      tags:
+        - "Business"
+      responses:
+        200:
+          description: "List of business types retrieved successfully"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: '#/components/schemas/BusinessTypeDTO'
+  /business-zone:
+    get:
+      summary: "Get all business zone"
+      description: "Retrieves a list of all available business zone."
+      operationId: "getAllBusinessesZone"
+      tags:
+        - "BusinessZone"
+      security:
+        - bearerAuth: [ "businesszone:read:all" ]
+      responses:
+        200:
+          description: "List of business zone retrieved successfully"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: '#/components/schemas/BusinessZoneDTO'
+  /my/business-zone:
+    get:
+      summary: "Get my business zone"
+      description: "Get my business zone"
+      operationId: "getMyBusinessZone"
+      tags:
+        - "BusinessZone"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: "business zone found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessZoneDTO'
+    put:
+      summary: "Update my business zone"
+      description: "Update my business zone"
+      operationId: "updateMyBusinessZone"
+      tags:
+        - "BusinessZone"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessZoneDTO'
+      responses:
+        200:
+          description: "business zone updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessZoneDTO'
+        400:
+          description: "Bad request - Invalid input data"
+        401:
+          description: "Unauthorized - Authentication token is missing or invalid"
+        403:
+          description: "Forbidden - The user does not have permission to perform this operation"
+  /business-zone/{businessZoneId}:
+    delete:
+      summary: "Delete business zone by ID"
+      description: "Deletes an existing business zone by its ID."
+      operationId: "deleteBusinessZoneById"
+      tags:
+        - "BusinessZone"
+      security:
+        - bearerAuth: [ "businesszone:delete" ]
+      parameters:
+        - name: "businessZoneId"
+          in: "path"
+          required: true
+          description: "The ID of the business zone to delete"
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        204:
+          description: "business zone successfully deleted"
+        401:
+          description: "Unauthorized - Authentication token is missing or invalid"
+        403:
+          description: "Forbidden - The user does not have permission to perform this operation"
+        404:
+          description: "business zone not found"
+  /public/business:
+    get:
+      summary: "Get all businesses"
+      description: "Retrieves a paginated list of published businesses with optional filters."
+      operationId: "getAllBusinesses"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: [ "business:read:all" ]
+      parameters:
+        - name: "page"
+          in: "query"
+          required: true
+          schema:
+            type: "integer"
+            default: 0
+          description: "Page number (zero-based)"
+        - name: "size"
+          in: "query"
+          required: false
+          schema:
+            type: "integer"
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: "Number of items per page"
+        - name: "field"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/BusinessSortFieldDTO"
+        - name: "direction"
+          in: "query"
+          required: false
+          schema:
+            $ref: "#/components/schemas/SortDirectionDTO"
+        - name: "name"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+          description: "Filter by business name (case-insensitive)"
+        - name: "type"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+            format: "uuid"
+          description: "Filter by business type ID"
+      responses:
+        200:
+          description: "Paginated list of businesses retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessPageableResponseDTO'
+  /public/business/by-ids:
+    post:
+      summary: "Get businesses by IDs"
+      description: "Retrieves a list of businesses matching the provided IDs. No pagination."
+      operationId: "getBusinessesByIds"
+      tags:
+        - "Business"
+      parameters:
+        - name: "extractCode"
+          in: "query"
+          required: false
+          schema:
+            type: "string"
+          description: "Specifies which business fields should be extracted and returned in the response."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BusinessIdsRequestDTO'
+      responses:
+        200:
+          description: "List of businesses retrieved successfully"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: '#/components/schemas/BusinessDTO'
+  /my/business:
+    post:
+      summary: "Create a new business"
+      description: "Creates a new business"
+      operationId: "createMyBusiness"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBusinessDTO'
+      responses:
+        201:
+          description: "business created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessIdDTO'
+        400:
+          description: "Bad request - Invalid input data"
+        401:
+          description: "Unauthorized - Authentication token is missing or invalid"
+        403:
+          description: "Forbidden - The user does not have permission to perform this operation"
+    get:
+      summary: "Get All Business for the Current User"
+      description: "Retrieves a list of all business available to the authenticated user. Authentication is managed using a token without scopes."
+      operationId: "getMyBusinesses"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: "Successfully retrieved the list of business"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: '#/components/schemas/BusinessDTO'
+  /my/business/{businessId}:
+    put:
+      summary: "Update my business"
+      description: "Updates an existing business by its ID."
+      operationId: "updateMyBusinesses"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          description: "The ID of my business to update"
+          schema:
+            type: "string"
+            format: "uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessDTO'
+      responses:
+        200:
+          description: "business updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDTO'
+        400:
+          description: "Bad request - Invalid input data"
+        401:
+          description: "Unauthorized - Authentication token is missing or invalid"
+        403:
+          description: "Forbidden - The user does not have permission to perform this operation"
+        404:
+          description: "business not found"
+  /my/business/{businessId}/publish:
+    put:
+      summary: "Publish a business"
+      description: "Publishes a business, making it visible to the public."
+      operationId: "publishMyBusiness"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          description: "The ID of the business to publish"
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        200:
+          description: "Business published successfully"
+        401:
+          description: "Unauthorized - Authentication token is missing or invalid"
+        403:
+          description: "Forbidden - The user does not have permission to perform this operation"
+        404:
+          description: "Business not found"
+  /my/business/{businessId}/unpublish:
+    put:
+      summary: "Unpublish a business"
+      description: "Unpublishes a business, hiding it from the public."
+      operationId: "unpublishMyBusiness"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          description: "The ID of the business to unpublish"
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        200:
+          description: "Business unpublished successfully"
+        401:
+          description: "Unauthorized - Authentication token is missing or invalid"
+        403:
+          description: "Forbidden - The user does not have permission to perform this operation"
+        404:
+          description: "Business not found"
+  /my/business/count:
+    get:
+      summary: "Retrieve business count"
+      description: "Returns the total number of businesses associated with the authenticated user's account"
+      operationId: "getMyBusinessCount"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: [ ]
+      responses:
+        200:
+          description: "Business count retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountResponseDTO'
+              example:
+                count: 5
+                lastUpdated: "2025-01-15T10:30:00Z"
+        400:
+          description: "Bad request - The request contains invalid parameters or malformed data"
+        401:
+          description: "Unauthorized - Authentication token is missing, expired, or invalid"
+  /business/{businessId}/user/{username}/permissions:
+    get:
+      summary: "Get all user permissions by context"
+      description: |
+        Retrieves all permissions for a given user within a specific business.
+        Permissions are grouped by CONTEXT (e.g. PRODUCT, ADVERT, ORDER, SONDAGE).
+        Each context defines the allowed actions: create, read, update, delete, publish, etc.
+        This endpoint provides a global and extensible permission view.
+      operationId: "getUserPermissions"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          description: "The unique identifier of the business."
+          schema:
+            type: "string"
+            format: "uuid"
+        - name: "username"
+          in: "path"
+          required: true
+          description: "The username of the user to retrieve permissions for."
+          schema:
+            type: "string"
+      responses:
+        '200':
+          description: "Successfully retrieved user permissions."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPermissionsDTO'
+        '400':
+          description: "Invalid input data."
+        '401':
+          description: "Authentication required."
+        '403':
+          description: "Forbidden."
+        '404':
+          description: "User or business not found."
+  /public/business/{id}:
+    get:
+      summary: "Get business by ID"
+      description: "Retrieves a specific business by its ID."
+      operationId: "getBusinessById"
+      tags:
+        - "Business"
+      parameters:
+        - name: "id"
+          in: "path"
+          required: true
+          description: "The ID of the business to retrieve"
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        200:
+          description: "business found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessDTO'
+        404:
+          description: "business not found"
+  /business/{businessId}:
+    delete:
+      summary: "Delete business by ID"
+      description: "Deletes an existing business by its ID."
+      operationId: "deleteBusinessById"
+      tags:
+        - "Business"
+      security:
+        - bearerAuth: [ "business:delete" ]
+      parameters:
+        - name: "businessId"
+          in: "path"
+          required: true
+          description: "The ID of the business to delete"
+          schema:
+            type: "string"
+            format: "uuid"
+      responses:
+        204:
+          description: "business successfully deleted"
+        401:
+          description: "Unauthorized - Authentication token is missing or invalid"
+        403:
+          description: "Forbidden - The user does not have permission to perform this operation"
+        404:
+          description: "business not found"
+  /my/collaborations:
+    get:
+      summary: "Get all my collaborations"
+      description: "Retrieves a list of all collaborations for the authenticated user's account."
+      operationId: "getMyCollaborations"
+      tags:
+        - "Collaboration"
+      security:
+        - bearerAuth: [ ]
+      responses:
+        '200':
+          description: "A list of collaborations for the user."
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: '#/components/schemas/CollaborationDTO'
+        '401':
+          description: "Unauthorized - Authentication token is missing or invalid"
+        '403':
+          description: "Forbidden - The user does not have permission to access this resource"
+        '404':
+          description: "Business not found"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    BusinessSortFieldDTO:
+      type: "string"
+      enum:
+        - "CREATED_AT"
+        - "NAME"
+    SortDirectionDTO:
+      type: "string"
+      enum:
+        - "ASC"
+        - "DESC"
+    BusinessPageableResponseDTO:
+      type: "object"
+      properties:
+        content:
+          type: "array"
+          items:
+            $ref: '#/components/schemas/BusinessDTO'
+        page:
+          $ref: '#/components/schemas/PageableResponsePageDTO'
+    PageableResponsePageDTO:
+      type: "object"
+      properties:
+        size:
+          type: "integer"
+          description: "Number of items per page"
+          example: 20
+        number:
+          type: "integer"
+          description: "Current page number (zero-based)"
+          example: 0
+        totalElements:
+          type: "integer"
+          format: "int64"
+          description: "Total number of items across all pages"
+          example: 100
+        totalPages:
+          type: "integer"
+          description: "Total number of pages"
+          example: 5
+    CreateResponseDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+    InvitationDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+        businessId:
+          type: "string"
+          format: "uuid"
+        businessName:
+          type: "string"
+        invitedBy:
+          type: "string"
+        invitedUsername:
+          type: "string"
+        roles:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/CollaboratorRoleDTO"
+        status:
+          $ref: "#/components/schemas/InvitationStatusDTO"
+        createdAt:
+          type: "string"
+          format: "date-time"
+        respondedAt:
+          type: "string"
+          format: "date-time"
+        rejectionReason:
+          type: "string"
+    InvitationStatusDTO:
+      type: string
+      enum:
+        - PENDING
+        - ACCEPTED
+        - REJECTED
+        - CANCELLED
+        - EXPIRED
+    RejectInvitationRequestDTO:
+      type: object
+      properties:
+        reason:
+          type: string
+    CollaborationDTO:
+      type: "object"
+      properties:
+        businessId:
+          type: "string"
+          format: "uuid"
+        businessName:
+          type: "string"
+        businessDescription:
+          type: "string"
+        invitedBy:
+          type: "string"
+        invitedUsername:
+          type: "string"
+        permissions:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/CollaboratorRoleDTO"
+        isActive:
+          type: boolean
+        createdAt:
+          type: "string"
+          format: "date-time"
+    BusinessIdsRequestDTO:
+      type: "object"
+      required:
+        - "businessIds"
+      properties:
+        businessIds:
+          type: "array"
+          minItems: "1"
+          maxItems: "50"
+          items:
+            type: "string"
+            format: "uuid"
+    UpdateBusinessImagesDTO:
+      type: "object"
+      properties:
+        logo:
+          type: "string"
+          format: "url"
+        banner:
+          type: "string"
+          format: "url"
+    CountResponseDTO:
+      type: "object"
+      properties:
+        value:
+          type: integer
+    UserPermissionsDTO:
+      type: object
+      description: "All permissions for a user grouped by context."
+      properties:
+        permissions:
+          type: array
+          description: "List of permission contexts with allowed actions."
+          items:
+            $ref: "#/components/schemas/ContextPermissionDTO"
+        effectiveRoles:
+          type: array
+          description: "Roles that grant these permissions."
+          items:
+            $ref: "#/components/schemas/RoleTypeDTO"
+    ContextPermissionDTO:
+      type: object
+      required:
+        - context
+      properties:
+        context:
+          $ref: "#/components/schemas/PermissionContextDTO"
+        canCreate:
+          type: boolean
+          description: "User is allowed to create entities for this context."
+
+        canRead:
+          type: boolean
+          description: "User can retrieve/view entities for this context."
+
+        canUpdate:
+          type: boolean
+          description: "User can modify existing entities for this context."
+
+        canDelete:
+          type: boolean
+          description: "User can delete entities for this context."
+
+        canPublish:
+          type: boolean
+          description: "User can publish/unpublish entities for this context."
+    PermissionContextDTO:
+      type: string
+      description: "The context to which permissions apply."
+      enum:
+        - PRODUCT
+        - ADVERT
+        - SONDAGE
+        - ORDER
+    CreateBusinessZoneDTO:
+      type: "object"
+      required:
+        - "name"
+      properties:
+        name:
+          type: "string"
+          description: "Name of the business zone"
+        description:
+          type: "string"
+          description: "Description of the business zone"
+    UpdateBusinessZoneDTO:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+          description: "Name of the business zone"
+        description:
+          type: "string"
+          description: "Description of the business zone"
+    BusinessZoneDTO:
+      type: "object"
+      required:
+        - "id"
+        - "name"
+        - "amount"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+          description: "Unique identifier of the business zone"
+        name:
+          type: "string"
+          description: "Name of the business zone"
+        description:
+          type: "string"
+          description: "Description of the business zone"
+        createdAt:
+          type: "string"
+          format: "date-time"
+          description: "Timestamp when the business zone was created"
+        updatedAt:
+          type: "string"
+          format: "date-time"
+          description: "Timestamp when the business zone was last updated"
+        active:
+          type: "boolean"
+          description: "Whether the business zone is active"
+    BusinessZoneIdDTO:
+      type: "object"
+      required:
+        - "id"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+    BusinessPhoneDTO:
+      type: "object"
+      required:
+        - "usage"
+        - "number"
+      properties:
+        usage:
+          type: "string"
+          description: "Context/usage of the phone number (e.g. whatsapp, main, fax)"
+          example: "whatsapp"
+        number:
+          $ref: "#/components/schemas/PhoneNumberDTO"
+    CreateBusinessDTO:
+      type: "object"
+      required:
+        - "name"
+        - "address"
+        - "phones"
+        - "email"
+        - "type"
+      properties:
+        name:
+          type: "string"
+          description: "Name of the business"
+        description:
+          type: "string"
+          description: "Description of the business"
+        address:
+          type: "string"
+          description: "Physical address of the business"
+        phones:
+          type: "array"
+          description: "List of phone numbers with their context"
+          items:
+            $ref: "#/components/schemas/BusinessPhoneDTO"
+        email:
+          type: "string"
+          format: "email"
+          description: "Email address of the business"
+        type:
+          type: "string"
+          format: "uuid"
+        active:
+          type: "boolean"
+          description: "Whether the business is active"
+          default: true
+        images:
+          type: "object"
+          additionalProperties:
+            type: "string"
+            format: "string"
+          description: "Map of image names to their url"
+          example:
+            logo: "123e4567-e89b-12d3-a456-426614174000"
+            banner: "987fcdeb-51a2-43d1-b456-426614174111"
+    UpdateBusinessDTO:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+          description: "Name of the business"
+        description:
+          type: "string"
+          description: "Description of the business"
+        address:
+          type: "string"
+          description: "Physical address of the business"
+        phones:
+          type: "object"
+          description: "Map of phone numbers grouped by context (e.g., 'work', 'personal', 'emergency')"
+          additionalProperties:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/PhoneNumberDTO"
+        email:
+          type: "string"
+          format: "email"
+          description: "Email address of the business"
+        type:
+          type: "string"
+          format: "uuid"
+        active:
+          type: "boolean"
+          description: "Whether the business is active"
+        images:
+          type: "object"
+          additionalProperties:
+            type: "string"
+            format: "string"
+          description: "Map of image names to their url"
+    BusinessTypeDTO:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+          description: "Unique identifier of the business type"
+        nameEn:
+          type: "string"
+          description: "English name of the business type"
+        descriptionEn:
+          type: "string"
+          description: "English description of the business type"
+        nameFr:
+          type: "string"
+          description: "French name of the business type"
+        descriptionFr:
+          type: "string"
+          description: "French description of the business type"
+    BusinessDTO:
+      type: "object"
+      required:
+        - "id"
+        - "name"
+        - "address"
+        - "phone"
+        - "email"
+        - "type"
+        - "active"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+          description: "Unique identifier of the business"
+        name:
+          type: "string"
+          description: "Name of the business"
+        description:
+          type: "string"
+          description: "Description of the business"
+        address:
+          type: "string"
+          description: "Physical address of the business"
+        phones:
+          type: "object"
+          description: "Map of phone numbers grouped by context (e.g., 'work', 'personal', 'emergency')"
+          additionalProperties:
+            type: "array"
+            items:
+              $ref: "#/components/schemas/PhoneNumberDTO"
+        email:
+          type: "string"
+          format: "email"
+          description: "Email address of the business"
+        type:
+          $ref: "#/components/schemas/BusinessTypeDTO"
+        active:
+          type: "boolean"
+          description: "Whether the business is active"
+        images:
+          type: "object"
+          additionalProperties:
+            type: "string"
+            format: "string"
+            description: "Map of image names to their url"
+        createdAt:
+          type: "string"
+          format: "date-time"
+          description: "Timestamp when the business was created"
+        updatedAt:
+          type: "string"
+          format: "date-time"
+          description: "Timestamp when the business was last updated"
+        owner:
+          type: "string"
+    BusinessIdDTO:
+      type: "object"
+      required:
+        - "id"
+      properties:
+        id:
+          type: "string"
+          format: "uuid"
+          description: "Unique identifier of the created business"
+    PhoneNumberDTO:
+      type: "object"
+      properties:
+        number:
+          type: "string"
+        countryCode:
+          type: "string"
+    ProductManagementPermissionDTO:
+      type: "object"
+      properties:
+        canManageProducts:
+          type: "boolean"
+          description: "Global permission flag. True if the user has any product management rights."
+        permissions:
+          $ref: "#/components/schemas/ProductPermissionDTO"
+        effectiveRoles:
+          type: array
+          description: "List of roles that grant these permissions"
+          items:
+            $ref: "#/components/schemas/RoleTypeDTO"
+    ProductPermissionDTO:
+      type: "object"
+      properties:
+        canCreate:
+          type: "boolean"
+          description: "Permission to create new products."
+        canRead:
+          type: "boolean"
+          description: "Permission to view/retrieve products."
+        canUpdate:
+          type: "boolean"
+          description: "Permission to edit existing products."
+        canDelete:
+          type: "boolean"
+          description: "Permission to delete products."
+        canPublish:
+          type: "boolean"
+          description: "Permission to change the published status of products."
+    RoleTypeDTO:
+      type: "string"
+      description: "The role that grants permissions."
+      enum:
+        - OWNER
+        - PRODUCT_MANAGER
+        - ORDER_MANAGER
+        - ADVERT_MANAGER
+        - SONDAGE_MANAGER
+        - DELIVERY_AGENT
+    CollaboratorDTO:
+      type: object
+      properties:
+        username:
+          type: string
+          description: "The username of the collaborator."
+        roles:
+          type: array
+          description: "The roles of the collaborator in the business."
+          items:
+            $ref: "#/components/schemas/CollaboratorRoleDTO"
+        addedAt:
+          type: string
+          format: date-time
+          description: "The date and time when the collaborator was added to the business."
+    InviteCollaboratorRequestDTO:
+      type: object
+      required:
+        - username
+        - roles
+      properties:
+        username:
+          type: string
+          description: "Username of the existing user to be added as a collaborator"
+        roles:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: "#/components/schemas/InviteCollaboratorRoleDTO"
+    RemoveCollaboratorRequestDTO:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          description: "Username of the collaborator to remove from the business"
+        reason:
+          type: string
+          description: "Optional reason for removing the collaborator"
+    CollaboratorRoleDTO:
+      type: string
+      description: "The role that can be assigned to a collaborator."
+      enum:
+        - OWNER
+        - PRODUCT_MANAGER
+        - ORDER_MANAGER
+        - ADVERT_MANAGER
+        - SONDAGE_MANAGER
+        - DELIVERY_AGENT
+    InviteCollaboratorRoleDTO:
+      type: string
+      description: "The role that can be assigned to a collaborator."
+      enum:
+        - PRODUCT_MANAGER
+        - ORDER_MANAGER
+        - ADVERT_MANAGER
+        - SONDAGE_MANAGER
+        - DELIVERY_AGENT

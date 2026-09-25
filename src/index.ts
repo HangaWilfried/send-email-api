@@ -1,11 +1,14 @@
 import "dotenv/config";
 import cors from "cors";
+import path from "path";
 import express from "express";
 
-import { ErrorHandler } from "./utils/error";
-import { LoggerMiddleware } from "./utils/middleware";
+import "./utils/api";
 
-import notificationRoutes from "./controllers/notification/notification.routes";
+import { ErrorHandler } from "./utils/error";
+import { LoggerMiddleware, socialBotMiddleware } from "./utils/middleware";
+
+import { notificationRoutes, crawlersRoutes } from "./controllers";
 
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -15,8 +18,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(LoggerMiddleware);
+app.use(socialBotMiddleware);
 
+app.use(crawlersRoutes);
 app.use("/", notificationRoutes);
+
+app.get("*", (_, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 app.use(ErrorHandler);
 
